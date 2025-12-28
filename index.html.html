@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MindfulMe - Mental Health Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Nunito', sans-serif; }
+        .mood-color { transition: all 0.3s ease; }
+        .mood-color:hover { transform: scale(1.1); }
+        .mood-color.selected { transform: scale(1.2); box-shadow: 0 0 20px currentColor; }
+        .emotion-btn.selected { ring: 4px; transform: scale(1.05); }
+        .trigger-btn.selected { background-color: #fbbf24; color: #1f2937; }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .card { backdrop-filter: blur(10px); background: rgba(255,255,255,0.95); }
+        .breathing-circle { animation: breathe 4s infinite ease-in-out; }
+        @keyframes breathe { 0%, 100% { transform: scale(1); opacity: 0.7; } 50% { transform: scale(1.2); opacity: 1; } }
+        .auth-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%); }
+        .input-focus:focus { box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.3); }
+    </style>
+</head>
+<body class="min-h-screen gradient-bg">
+
+    <!-- Auth Screen -->
+    <div id="authScreen" class="min-h-screen auth-bg flex items-center justify-center p-4">
+        <div class="card rounded-3xl shadow-2xl p-8 w-full max-w-md fade-in">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold text-purple-700 mb-2">🧠 MindfulMe</h1>
+                <p class="text-gray-600">Your personal mental health companion</p>
+            </div>
+
+            <!-- Login Form -->
+            <div id="loginForm">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Welcome Back</h2>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-semibold mb-2">Username</label>
+                    <input type="text" id="loginUsername" placeholder="Enter your username" 
+                        class="w-full p-4 rounded-xl border-2 border-gray-200 focus:border-purple-400 focus:outline-none input-focus transition">
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-gray-700 font-semibold mb-2">Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password" 
+                        class="w-full p-4 rounded-xl border-2 border-gray-200 focus:border-purple-400 focus:outline-none input-focus transition">
+                </div>
+
+                <div id="loginError" class="hidden mb-4 p-3 bg-red-100 text-red-700 rounded-xl text-center font-semibold"></div>
+
+                <button onclick="login()" class="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-xl rounded-2xl hover:from-purple-700 hover:to-indigo-700 transition shadow-lg hover:shadow-xl mb-4">
+                    Log In 🔐
+                </button>
+
+                <p class="text-center text-gray-600">
+                    Don't have an account? 
+                    <button onclick="showSignup()" class="text-purple-600 font-bold hover:underline">Sign Up</button>
+                </p>
+            </div>
+
+            <!-- Signup Form -->
+            <div id="signupForm" class="hidden">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Create Account</h2>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-semibold mb-2">Display Name</label>
+                    <input type="text" id="signupName" placeholder="What should we call you?" 
+                        class="w-full p-4 rounded-xl border-2 border-gray-200 focus:border-purple-400 focus:outline-none input-focus transition">
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-semibold mb-2">Username</label>
+                    <input type="text" id="signupUsername" placeholder="Choose a username" 
+                        class="w-full p-4 rounded-xl border-2 border-gray-200 focus:border-purple-400 focus:outline-none input-focus transition">
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-semibold mb-2">Password</label>
+                    <input type="password" id="signupPassword" placeholder="Create a password" 
+                        class="w-full p-4 rounded-xl border-2 border-gray-200 focus:border-purple-400 focus:outline-none input-focus transition">
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-gray-700 font-semibold mb-2">Confirm Password</label>
+                    <input type="password" id="signupConfirm" placeholder="Confirm your password" 
+                        class="w-full p-4 rounded-xl border-2 border-gray-200 focus:border-purple-400 focus:outline-none input-focus transition">
+                </div>
+
+                <div id="signupError" class="hidden mb-4 p-3 bg-red-100 text-red-700 rounded-xl text-center font-semibold"></div>
+                <div id="signupSuccess" class="hidden mb-4 p-3 bg-green-100 text-green-700 rounded-xl text-center font-semibold"></div>
+
+                <button onclick="signup()" class="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-xl rounded-2xl hover:from-purple-700 hover:to-indigo-700 transition shadow-lg hover:shadow-xl mb-4">
+                    Create Account ✨
+                </button>
+
+                <p class="text-center text-gray-600">
+                    Already have an account? 
+                    <button onclick="showLogin()" class="text-purple-600 font-bold hover:underline">Log In</button>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App (Hidden until login) -->
+    <div id="mainApp" class="hidden">
+        <!-- Navigation -->
+        <nav class="bg-white/90 backdrop-blur-sm shadow-lg sticky top-0 z-50">
+            <div class="max-w-4xl mx-auto px-4 py-3">
+                <div class="flex items-center justify-between">
+                    <h1 class="text-2xl font-bold text-purple-700">🧠 MindfulMe</h1>
+                    <div class="flex gap-2 items-center">
+                        <button onclick="showSection('checkin')" class="nav-btn px-4 py-2 rounded-full text-sm font-semibold hover:bg-purple-100 transition">Check-In</button>
+                        <button onclick="showSection('journal')" class="nav-btn px-4 py-2 rounded-full text-sm font-semibold hover:bg-purple-100 transition">Journal</button>
+                        <button onclick="showSection('history')" class="nav-btn px-4 py-2 rounded-full text-sm font-semibold hover:bg-purple-100 transition">History</button>
+                        <button onclick="showSection('calm')" class="nav-btn px-4 py-2 rounded-full text-sm font-semibold hover:bg-purple-100 transition">Calm</button>
+                        <button onclick="showSection('profile')" class="nav-btn px-4 py-2 rounded-full text-sm font-semibold hover:bg-purple-100 transition">👤</button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Welcome Banner -->
+        <div class="max-w-4xl mx-auto px-4 pt-6">
+            <div class="bg-white/80 backdrop-blur rounded-2xl p-4 shadow-lg mb-6">
+                <p class="text-lg text-gray-700">Hello, <span id="welcomeName" class="font-bold text-purple-700"></span>! 👋</p>
+                <p class="text-sm text-gray-500">How are you feeling today?</p>
+            </div>
+        </div>
+
+        <main class="max-w-4xl mx-auto px-4 pb-8">
+            <!-- Check-In Section -->
+            <section id="checkin" class="section fade-in">
+                <div class="card rounded-3xl shadow-2xl p-8 mb-6">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-2">How are you feeling today?</h2>
+                    <p class="text-gray-500 mb-6" id="currentDate"></p>
+
+                    <!-- Color Mood Picker -->
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold text-gray-700 mb-4">🎨 Pick a color that matches your mood</h3>
+                        <div class="flex flex-wrap gap-4 justify-center" id="colorPicker">
+                            <button onclick="selectColor('#ef4444', 'Angry/Frustrated')" class="mood-color w-16 h-16 rounded-full bg-red-500 border-4 border-white shadow-lg" title="Angry/Frustrated"></button>
+                            <button onclick="selectColor('#f97316', 'Anxious/Stressed')" class="mood-color w-16 h-16 rounded-full bg-orange-500 border-4 border-white shadow-lg" title="Anxious/Stressed"></button>
+                            <button onclick="selectColor('#eab308', 'Okay/Neutral')" class="mood-color w-16 h-16 rounded-full bg-yellow-500 border-4 border-white shadow-lg" title="Okay/Neutral"></button>
+                            <button onclick="selectColor('#22c55e', 'Happy/Content')" class="mood-color w-16 h-16 rounded-full bg-green-500 border-4 border-white shadow-lg" title="Happy/Content"></button>
+                            <button onclick="selectColor('#3b82f6', 'Calm/Peaceful')" class="mood-color w-16 h-16 rounded-full bg-blue-500 border-4 border-white shadow-lg" title="Calm/Peaceful"></button>
+                            <button onclick="selectColor('#8b5cf6', 'Creative/Energized')" class="mood-color w-16 h-16 rounded-full bg-violet-500 border-4 border-white shadow-lg" title="Creative/Energized"></button>
+                            <button onclick="selectColor('#ec4899', 'Loved/Grateful')" class="mood-color w-16 h-16 rounded-full bg-pink-500 border-4 border-white shadow-lg" title="Loved/Grateful"></button>
+                            <button onclick="selectColor('#6b7280', 'Sad/Down')" class="mood-color w-16 h-16 rounded-full bg-gray-500 border-4 border-white shadow-lg" title="Sad/Down"></button>
+                            <button onclick="selectColor('#1f2937', 'Overwhelmed/Shutdown')" class="mood-color w-16 h-16 rounded-full bg-gray-800 border-4 border-white shadow-lg" title="Overwhelmed/Shutdown"></button>
+                        </div>
+                        <p id="selectedMoodLabel" class="text-center mt-4 text-lg font-semibold text-gray-600"></p>
+                    </div>
+
+                    <!-- Energy Level -->
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold text-gray-700 mb-4">⚡ Energy Level</h3>
+                        <input type="range" id="energyLevel" min="1" max="10" value="5" class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-600">
+                        <div class="flex justify-between text-sm text-gray-500 mt-2">
+                            <span>😴 Very Low</span>
+                            <span>⚡ Balanced</span>
+                            <span>🚀 Very High</span>
+                        </div>
+                    </div>
+
+                    <!-- Emotions -->
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold text-gray-700 mb-4">💭 What emotions are you experiencing?</h3>
+                        <div class="flex flex-wrap gap-3" id="emotionPicker">
+                            <button onclick="toggleEmotion(this)" class="emotion-btn px-4 py-2 rounded-full bg-purple-100 text-purple-700 font-semibold hover:bg-purple-200 transition">😊 Happy</button>
+                            <button onclick="toggleEmotion(this)" class="emotion-btn px-4 py-2 rounded-full bg-blue-100 text-blue-700 font-semibold hover:bg-blue-200 transition">😢 Sad</button>
+                            <button onclick="toggleEmotion(this)" class="emotion-btn px-4 py-2 rounded-full bg-red-100 text-red-700 font-semibold hover:bg-red-200 transition">😠 Angry</button>
+                            <button onclick="toggleEmotion(this)" class="emotion-btn px-4 py-2 rounded-full bg-yellow-100 text-yellow-700 font-semibold hover:bg-yellow-200 transition">😰 Anxious</button>
+                            <button onclick="toggleEmotion(this)" class="emotion-btn px-4 py-2 rounded-full bg-green-100 text-green-700 font-semibold hover:bg-green-200 transition">😌 Calm</button>
+                            <button onclick="toggleEmotion(this)" class="emotion-btn px-4 py-2 rounded-full bg-pink-100 text-pink-700 font-semibold hover:bg-pink-200 transition">🥰 Loved</button>
+                            <button onclick="toggleEmotion(this)" class="emotion-btn px-4 py-2 rounded-full bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition">😔 Lonely</button>
+                            <button onclick="toggleEmotion(this)" class="emotion-btn px-4 py-2 rounded-full bg-orange-100 text-orange-700 font-semibold hover:bg-orange-200 transition">😤 Frustrated</button>
+                            <button onclick="toggleEmotion(this)" class="emotion-btn px-4 py-2 rounded-full bg-indigo-100 text-indigo-700 font-semibold hover:bg-indigo-200 transition">🤔 Confused</button>
+                            <button onclick="toggleEmotion(this)" class="emotion-btn px-4 py-2 rounded-full bg-teal-100 text-teal-700 font-semibold hover:bg-teal-200 transition">😴 Tired</button>
+                            <button onclick="toggleEmotion(this)" class="emotion-btn px-4 py-2 rounded-full bg-rose-100 text-rose-700 font-semibold hover:bg-rose-200 transition">😨 Scared</button>
+                            <button onclick="toggleEmotion(this)" class="emotion-btn px-4 py-2 rounded-full bg-cyan-100 text-cyan-700 font-semibold hover:bg-cyan-200 transition">🤩 Excited</button>
+                            <button onclick="toggleEmotion(this)" class="emotion-btn px-4 py-2 rounded-full bg-amber-100 text-amber-700 font-semibold hover:bg-amber-200 transition">😶 Numb</button>
+                            <button onclick="toggleEmotion(this)" class="emotion-btn px-4 py-2 rounded-full bg-lime-100 text-lime-700 font-semibold hover:bg-lime-200 transition">🌟 Hopeful</button>
+                            <button onclick="toggleEmotion(this)" class="emotion-btn px-4 py-2 rounded-full bg-fuchsia-100 text-fuchsia-700 font-semibold hover:bg-fuchsia-200 transition">🎭 Manic</button>
+                            <button onclick="toggleEmotion(this)" class="emotion-btn px-4 py-2 rounded-full bg-slate-100 text-slate-700 font-semibold hover:bg-slate-200 transition">😞 Depressed</button>
+                            <button onclick="toggleEmotion(this)" class="emotion-btn px-4 py-2 rounded-full bg-violet-100 text-violet-700 font-semibold hover:bg-violet-200 transition">🌀 Dissociated</button>
+                        </div>
+                    </div>
+
+                    <!-- Triggers -->
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold text-gray-700 mb-4">⚠️ Any triggers or stressors today?</h3>
+                        <div class="flex flex-wrap gap-3" id="triggerPicker">
+                            <button onclick="toggleTrigger(this)" class="trigger-btn px-4 py-2 rounded-full bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition border-2 border-transparent">🔊 Loud Noises</button>
+                            <button onclick="toggleTrigger(this)" class="trigger-btn px-4 py-2 rounded-full bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition border-2 border-transparent">👥 Crowds</button>
+                            <button onclick="toggleTrigger(this)" class="trigger-btn px-4 py-2 rounded-full bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition border-2 border-transparent">🔄 Routine Change</button>
+                            <button onclick="toggleTrigger(this)" class="trigger-btn px-4 py-2 rounded-full bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition border-2 border-transparent">💡 Bright Lights</button>
+                            <button onclick="toggleTrigger(this)" class="trigger-btn px-4 py-2 rounded-full bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition border-2 border-transparent">😴 Lack of Sleep</button>
+                            <button onclick="toggleTrigger(this)" class="trigger-btn px-4 py-2 rounded-full bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition border-2 border-transparent">💬 Social Interaction</button>
+                            <button onclick="toggleTrigger(this)" class="trigger-btn px-4 py-2 rounded-full bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition border-2 border-transparent">🍽️ Missed Meals</button>
+                            <button onclick="toggleTrigger(this)" class="trigger-btn px-4 py-2 rounded-full bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition border-2 border-transparent">👔 Textures</button>
+                            <button onclick="toggleTrigger(this)" class="trigger-btn px-4 py-2 rounded-full bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition border-2 border-transparent">⏰ Time Pressure</button>
+                            <button onclick="toggleTrigger(this)" class="trigger-btn px-4 py-2 rounded-full bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition border-2 border-transparent">😰 Expectations</button>
+                            <button onclick="toggleTrigger(this)" class="trigger-btn px-4 py-2 rounded-full bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition border-2 border-transparent">🌡️ Temperature</button>
+                            <button onclick="toggleTrigger(this)" class="trigger-btn px-4 py-2 rounded-full bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition border-2 border-transparent">💊 Medication</button>
+                            <button onclick="toggleTrigger(this)" class="trigger-btn px-4 py-2 rounded-full bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition border-2 border-transparent">🤷 Uncertainty</button>
+                            <button onclick="toggleTrigger(this)" class="trigger-btn px-4 py-2 rounded-full bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition border-2 border-transparent">💭 Overwhelm</button>
+                            <button onclick="toggleTrigger(this)" class="trigger-btn px-4 py-2 rounded-full bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition border-2 border-transparent">💔 Rejection</button>
+                            <button onclick="toggleTrigger(this)" class="trigger-btn px-4 py-2 rounded-full bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition border-2 border-transparent">🎢 Mood Swing</button>
+                        </div>
+                    </div>
+
+                    <!-- Meltdown Check -->
+                    <div class="mb-8 p-6 bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl border-2 border-amber-200">
+                        <h3 class="text-xl font-semibold text-amber-800 mb-4">🌊 Meltdown/Shutdown Check</h3>
+                        <div class="flex flex-wrap gap-4">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="hadMeltdown" class="w-5 h-5 accent-amber-500">
+                                <span class="text-amber-700 font-medium">Had a meltdown today</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="hadShutdown" class="w-5 h-5 accent-amber-500">
+                                <span class="text-amber-700 font-medium">Had a shutdown today</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="nearMeltdown" class="w-5 h-5 accent-amber-500">
+                                <span class="text-amber-700 font-medium">Close to meltdown</span>
+                            </label>
+                        </div>
+                        <textarea id="meltdownNotes" placeholder="What happened? What helped? (optional)" class="w-full mt-4 p-4 rounded-xl border-2 border-amber-200 focus:border-amber-400 focus:outline-none resize-none" rows="2"></textarea>
+                    </div>
+
+                    <!-- Bipolar Episode Tracking -->
+                    <div class="mb-8 p-6 bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl border-2 border-purple-200">
+                        <h3 class="text-xl font-semibold text-purple-800 mb-4">🎢 Bipolar Episode Tracking</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-purple-700 font-medium mb-2">Current Episode Type</label>
+                                <select id="episodeType" class="w-full p-3 rounded-xl border-2 border-purple-200 focus:border-purple-400 focus:outline-none">
+                                    <option value="">None / Stable</option>
+                                    <option value="hypomanic">Hypomanic</option>
+                                    <option value="manic">Manic</option>
+                                    <option value="depressive">Depressive</option>
+                                    <option value="mixed">Mixed Episode</option>
+                                    <option value="rapid">Rapid Cycling</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-purple-700 font-medium mb-2">Episode Intensity (1-10)</label>
+                                <input type="range" id="episodeIntensity" min="1" max="10" value="1" class="w-full h-3 bg-purple-200 rounded-lg appearance-none cursor-pointer accent-purple-600">
+                                <div class="flex justify-between text-xs text-purple-500 mt-1">
+                                    <span>Mild</span>
+                                    <span>Severe</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex flex-wrap gap-3">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="tookMeds" class="w-5 h-5 accent-purple-500">
+                                <span class="text-purple-700 font-medium">Took medication today</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="sleptWell" class="w-5 h-5 accent-purple-500">
+                                <span class="text-purple-700 font-medium">Slept well last night</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Quick Notes -->
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-gray-700 mb-4">📝 Quick Notes</h3>
+                        <textarea id="quickNotes" placeholder="Anything else you want to note about today..." class="w-full p-4 rounded-xl border-2 border-gray-200 focus:border-purple-400 focus:outline-none resize-none" rows="3"></textarea>
+                    </div>
+
+                    <button onclick="saveCheckin()" class="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-xl rounded-2xl hover:from-purple-700 hover:to-indigo-700 transition shadow-lg hover:shadow-xl">
+                        💾 Save Check-In
+                    </button>
+                </div>
+            </section>
+
+            <!-- Journal Section -->
+            <section id="journal" class="section hidden fade-in">
+                <div class="card rounded-3xl shadow-2xl p-8">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-6">📖 My Journal</h2>
+                    
+                    <div class="mb-6">
+                        <label class="text-lg font-semibold text-gray-700 mb-2 block">Today's Title</label>
+                        <input type="text" id="journalTitle" placeholder="Give today a title..." class="w-full p-4 rounded-xl border-2 border-gray-200 focus:border-purple-400 focus:outline-none text-lg">
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="text-lg font-semibold text-gray-700 mb-2 block">What's on your mind?</label>
+                        <textarea id="journalEntry" placeholder="Write freely about your thoughts, feelings, experiences... This is your safe space." class="w-full p-4 rounded-xl border-2 border-gray-200 focus:border-purple-400 focus:outline-none resize-none text-lg" rows="10"></textarea>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="text-lg font-semibold text-gray-700 mb-2 block">🙏 Gratitude (3 things you're grateful for)</label>
+                        <input type="text" id="gratitude1" placeholder="1. " class="w-full p-3 rounded-xl border-2 border-gray-200 focus:border-purple-400 focus:outline-none mb-2">
+                        <input type="text" id="gratitude2" placeholder="2. " class="w-full p-3 rounded-xl border-2 border-gray-200 focus:border-purple-400 focus:outline-none mb-2">
+                        <input type="text" id="gratitude3" placeholder="3. " class="w-full p-3 rounded-xl border-2 border-gray-200 focus:border-purple-400 focus:outline-none">
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="text-lg font-semibold text-gray-700 mb-2 block">🎯 Tomorrow's Intention</label>
+                        <input type="text" id="intention" placeholder="What do you hope for tomorrow?" class="w-full p-4 rounded-xl border-2 border-gray-200 focus:border-purple-400 focus:outline-none">
+                    </div>
+
+                    <button onclick="saveJournal()" class="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-xl rounded-2xl hover:from-purple-700 hover:to-indigo-700 transition shadow-lg hover:shadow-xl">
+                        💾 Save Journal Entry
+                    </button>
+                </div>
+            </section>
+
+            <!-- History Section -->
+            <section id="history" class="section hidden fade-in">
+                <div class="card rounded-3xl shadow-2xl p-8">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-6">📅 My History</h2>
+                    
+                    <!-- Stats Overview -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                        <div class="bg-purple-100 rounded-2xl p-4 text-center">
+                            <p class="text-3xl font-bold text-purple-700" id="totalEntries">0</p>
+                            <p class="text-sm text-purple-600">Total Entries</p>
+                        </div>
+                        <div class="bg-green-100 rounded-2xl p-4 text-center">
+                            <p class="text-3xl font-bold text-green-700" id="currentStreak">0</p>
+                            <p class="text-sm text-green-600">Day Streak</p>
+                        </div>
+                        <div class="bg-amber-100 rounded-2xl p-4 text-center">
+                            <p class="text-3xl font-bold text-amber-700" id="meltdownCount">0</p>
+                            <p class="text-sm text-amber-600">Meltdowns (30d)</p>
+                        </div>
+                        <div class="bg-blue-100 rounded-2xl p-4 text-center">
+                            <p class="text-3xl font-bold text-blue-700" id="journalCount">0</p>
+                            <p class="text-sm text-blue-600">Journal Entries</p>
+                        </div>
+                    </div>
+
+                    <!-- Mood Calendar -->
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold text-gray-700 mb-4">Mood Colors This Month</h3>
+                        <div id="moodCalendar" class="grid grid-cols-7 gap-2">
+                            <!-- Calendar will be generated here -->
+                        </div>
+                    </div>
+
+                    <!-- Past Entries -->
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-700 mb-4">Recent Entries</h3>
+                        <div id="entriesList" class="space-y-4">
+                            <!-- Entries will be loaded here -->
+                        </div>
+                    </div>
+
+                    <button onclick="exportData()" class="mt-6 px-6 py-2 bg-blue-100 text-blue-600 font-semibold rounded-xl hover:bg-blue-200 transition mr-4">
+                        📤 Export Data
+                    </button>
+                    <button onclick="clearHistory()" class="mt-6 px-6 py-2 bg-red-100 text-red-600 font-semibold rounded-xl hover:bg-red-200 transition">
+                        🗑️ Clear All Data
+                    </button>
+                </div>
+            </section>
+
+            <!-- Calm Section -->
+            <section id="calm" class="section hidden fade-in">
+                <div class="card rounded-3xl shadow-2xl p-8 text-center">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-6">🧘 Calm Space</h2>
+                    
+                    <!-- Breathing Exercise -->
+                    <div class="mb-8 p-8 bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl">
+                        <h3 class="text-xl font-semibold text-gray-700 mb-4">Breathing Exercise</h3>
+                        <div class="relative flex items-center justify-center h-48">
+                            <div id="breathCircle" class="w-32 h-32 rounded-full bg-gradient-to-r from-blue-400 to-purple-400 flex items-center justify-center">
+                                <span id="breathText" class="text-white font-bold text-xl">Start</span>
+                            </div>
+                        </div>
+                        <button onclick="startBreathing()" id="breathBtn" class="mt-4 px-8 py-3 bg-blue-500 text-white font-bold rounded-full hover:bg-blue-600 transition">
+                            Start 4-7-8 Breathing
+                        </button>
+                    </div>
+
+                    <!-- Grounding Exercise -->
+                    <div class="mb-8 p-8 bg-gradient-to-br from-green-50 to-teal-50 rounded-2xl text-left">
+                        <h3 class="text-xl font-semibold text-gray-700 mb-4 text-center">5-4-3-2-1 Grounding</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-start gap-3">
+                                <span class="text-2xl">👀</span>
+                                <div class="flex-1">
+                                    <strong>5 things you can SEE</strong>
+                                    <input type="text" class="w-full p-2 mt-1 rounded-lg border border-gray-200 text-sm" placeholder="Look around...">
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <span class="text-2xl">✋</span>
+                                <div class="flex-1">
+                                    <strong>4 things you can TOUCH</strong>
+                                    <input type="text" class="w-full p-2 mt-1 rounded-lg border border-gray-200 text-sm" placeholder="Feel around...">
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <span class="text-2xl">👂</span>
+                                <div class="flex-1">
+                                    <strong>3 things you can HEAR</strong>
+                                    <input type="text" class="w-full p-2 mt-1 rounded-lg border border-gray-200 text-sm" placeholder="Listen...">
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <span class="text-2xl">👃</span>
+                                <div class="flex-1">
+                                    <strong>2 things you can SMELL</strong>
+                                    <input type="text" class="w-full p-2 mt-1 rounded-lg border border-gray-200 text-sm" placeholder="Breathe in...">
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <span class="text-2xl">👅</span>
+                                <div class="flex-1">
+                                    <strong>1 thing you can TASTE</strong>
+                                    <input type="text" class="w-full p-2 mt-1 rounded-lg border border-gray-200 text-sm" placeholder="Notice...">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Affirmations -->
+                    <div class="p-8 bg-gradient-to-br from-pink-50 to-rose-50 rounded-2xl">
+                        <h3 class="text-xl font-semibold text-gray-700 mb-4">💝 Affirmation</h3>
+                        <p id="affirmation" class="text-2xl font-bold text-purple-700 italic mb-4">"You are doing your best, and that is enough."</p>
+                        <button onclick="newAffirmation()" class="px-6 py-2 bg-pink-500 text-white font-semibold rounded-full hover:bg-pink-600 transition">
+                            New Affirmation ✨
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Profile Section -->
+            <section id="profile" class="section hidden fade-in">
+                <div class="card rounded-3xl shadow-2xl p-8">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-6">👤 My Profile</h2>
+                    
+                    <div class="flex items-center gap-6 mb-8 p-6 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl">
+                        <div class="w-20 h-20 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 flex items-center justify-center text-white text-3xl font-bold" id="profileAvatar">
+                            <!-- Initial will be set by JS -->
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-800" id="profileName"></h3>
+                            <p class="text-gray-500">@<span id="profileUsername"></span></p>
+                            <p class="text-sm text-purple-600 mt-1">Member since <span id="memberSince"></span></p>
+                        </div>
+                    </div>
+
+                    <!-- Account Settings -->
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold text-gray-700 mb-4">Account Settings</h3>
+                        
+                        <div class="mb-4">
+                            <label class="block text-gray-700 font-semibold mb-2">Update Display Name</label>
+                            <input type="text" id="updateName" placeholder="Enter new display name" 
+                                class="w-full p-4 rounded-xl border-2 border-gray-200 focus:border-purple-400 focus:outline-none">
+                        </div>
+                        
+                        <button onclick="updateProfile()" class="px-6 py-3 bg-purple-600 text-white font-semibold rounded-xl hover:bg-purple-700 transition">
+                            Update Profile
+                        </button>
+                    </div>
+
+                    <!-- Data Summary -->
+                    <div class="mb-8 p-6 bg-gray-50 rounded-2xl">
+                        <h3 class="text-xl font-semibold text-gray-700 mb-4">📊 Your Journey</h3>
+                        <div class="grid grid-cols-2 gap-4 text-center">
+                            <div>
+                                <p class="text-4xl font-bold text-purple-600" id="totalDays">0</p>
+                                <p class="text-gray-600">Days Tracked</p>
+                            </div>
+                            <div>
+                                <p class="text-4xl font-bold text-green-600" id="avgEnergy">-</p>
+                                <p class="text-gray-600">Avg Energy Level</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Logout -->
+                    <button onclick="logout()" class="w-full py-4 bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold text-xl rounded-2xl hover:from-red-600 hover:to-orange-600 transition shadow-lg">
+                        🚪 Log Out
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-8 right-8 bg-green-500 text-white px-6 py-3 rounded-xl shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 font-semibold z-50">
+        Saved successfully! 💚
+    </div>
+
+    <script>
+        // State
+        let currentUser = null;
+        let selectedColor = null;
+        let selectedMoodLabel = '';
+        let selectedEmotions = [];
+        let selectedTriggers = [];
+        let breathingInterval = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            checkSession();
+        });
+
+        // ==================== AUTH FUNCTIONS ====================
+        
+        function checkSession() {
+            const session = localStorage.getItem('mindfulme_session');
+            if (session) {
+                const userData = JSON.parse(session);
+                const users = JSON.parse(localStorage.getItem('mindfulme_users') || '{}');
+                if (users[userData.username]) {
+                    currentUser = users[userData.username];
+                    showMainApp();
+                }
+            }
+        }
+
+        function showLogin() {
+            document.getElementById('loginForm').classList.remove('hidden');
+            document.getElementById('signupForm').classList.add('hidden');
+            clearAuthErrors();
+        }
+
+        function showSignup() {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('signupForm').classList.remove('hidden');
+            clearAuthErrors();
+        }
+
+        function clearAuthErrors() {
+            document.getElementById('loginError').classList.add('hidden');
+            document.getElementById('signupError').classList.add('hidden');
+            document.getElementById('signupSuccess').classList.add('hidden');
+        }
+
+        function signup() {
+            const name = document.getElementById('signupName').value.trim();
+            const username = document.getElementById('signupUsername').value.trim().toLowerCase();
+            const password = document.getElementById('signupPassword').value;
+            const confirm = document.getElementById('signupConfirm').value;
+
+            clearAuthErrors();
+
+            // Validation
+            if (!name || !username || !password) {
+                showError('signupError', 'Please fill in all fields');
+                return;
+            }
+
+            if (username.length < 3) {
+                showError('signupError', 'Username must be at least 3 characters');
+                return;
+            }
+
+            if (password.length < 4) {
+                showError('signupError', 'Password must be at least 4 characters');
+                return;
+            }
+
+            if (password !== confirm) {
+                showError('signupError', 'Passwords do not match');
+                return;
+            }
+
+            // Check if username exists
+            const users = JSON.parse(localStorage.getItem('mindfulme_users') || '{}');
+            if (users[username]) {
+                showError('signupError', 'Username already exists');
+                return;
+            }
+
+            // Create user
+            users[username] = {
+                name: name,
+                username: username,
+                password: btoa(password), // Basic encoding (not secure for production)
+                createdAt: new Date().toISOString(),
+                entries: []
+            };
+
+            localStorage.setItem('mindfulme_users', JSON.stringify(users));
+
+            // Show success and switch to login
+            document.getElementById('signupSuccess').textContent = 'Account created! Please log in.';
+            document.getElementById('signupSuccess').classList.remove('hidden');
+            
+            // Clear form
+            document.getElementById('signupName').value = '';
+            document.getElementById('signupUsername').value = '';
+            document.getElementById('signupPassword').value = '';
+            document.getElementById('signupConfirm').value = '';
+
+            setTimeout(() => showLogin(), 1500);
+        }
+
+        function login() {
+            const username = document.getElementById('loginUsername').value.trim().toLowerCase();
+            const password = document.getElementById('loginPassword').value;
+
+            clearAuthErrors();
+
+            if (!username || !password) {
+                showError('loginError', 'Please enter username and password');
+                return;
+            }
+
+            const users = JSON.parse(localStorage.getItem('mindfulme_users') || '{}');
+            const user = users[username];
+
+            if (!user || atob(user.password) !== password) {
+                showError('loginError', 'Invalid username or password');
+                return;
+            }
+
+            // Save session
+            currentUser = user;
+            localStorage.setItem('mindfulme_session', JSON.stringify({ username: username }));
+
+            // Clear form
+            document.getElementById('loginUsername').value = '';
+            document.getElementById('loginPassword').value = '';
+
+            showMainApp();
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to log out?')) {
+                currentUser = null;
+                localStorage.removeItem('mindfulme_session');
+                document.getElementById('mainApp').classList.add('hidden');
+                document.getElementById('authScreen').classList.remove('hidden');
+                showLogin();
+            }
+        }
+
+        function showError(elementId, message) {
+            const el = document.getElementById(elementId);
+            el.textContent = message;
+            el.classList.remove('hidden');
+        }
+
+        function showMainApp() {
+            document.getElementById('authScreen').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            
+            // Update UI with user data
+            document.getElementById('welcomeName').textContent = currentUser.name;
+            document.getElementById('profileName').textContent = currentUser.name;
+            document.getElementById('profileUsername').textContent = currentUser.username;
+            document.getElementById('profileAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+            document.getElementById('memberSince').textContent = new Date(currentUser.createdAt).toLocaleDateString();
+            document.getElementById('updateName').value = currentUser.name;
+
+            updateDate();
+            loadHistory();
+            updateProfileStats();
+        }
+
+        function updateProfile() {
+            const newName = document.getElementById('updateName').value.trim();
+            if (!newName) {
+                showToast('Please enter a name');
+                return;
+            }
+
+            const users = JSON.parse(localStorage.getItem('mindfulme_users') || '{}');
+            users[currentUser.username].name = newName;
+            currentUser.name = newName;
+            localStorage.setItem('mindfulme_users', JSON.stringify(users));
+
+            document.getElementById('welcomeName').textContent = newName;
+            document.getElementById('profileName').textContent = newName;
+            document.getElementById('profileAvatar').textContent = newName.charAt(0).toUpperCase();
+
+            showToast('Profile updated! ✨');
+        }
+
+        // ==================== APP FUNCTIONS ====================
+
+        function updateDate() {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', options);
+        }
+
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(sectionId).classList.remove('hidden');
+            
+            if (sectionId === 'history') {
+                loadHistory();
+            }
+            if (sectionId === 'profile') {
+                updateProfileStats();
+            }
+        }
+
+        function selectColor(color, label) {
+            selectedColor = color;
+            selectedMoodLabel = label;
+            document.querySelectorAll('.mood-color').forEach(btn => {
+                btn.classList.remove('selected');
+                btn.style.boxShadow = '';
+            });
+            event.target.classList.add('selected');
+            event.target.style.boxShadow = `0 0 25px ${color}`;
+            document.getElementById('selectedMoodLabel').textContent = label;
+            document.getElementById('selectedMoodLabel').style.color = color;
+        }
+
+        function toggleEmotion(btn) {
+            btn.classList.toggle('selected');
+            if (btn.classList.contains('selected')) {
+                btn.style.transform = 'scale(1.1)';
+                btn.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
+                selectedEmotions.push(btn.textContent.trim());
+            } else {
+                btn.style.transform = '';
+                btn.style.boxShadow = '';
+                selectedEmotions = selectedEmotions.filter(e => e !== btn.textContent.trim());
+            }
+        }
+
+        function toggleTrigger(btn) {
+            btn.classList.toggle('selected');
+            if (btn.classList.contains('selected')) {
+                selectedTriggers.push(btn.textContent.trim());
+            } else {
+                selectedTriggers = selectedTriggers.filter(t => t !== btn.textContent.trim());
+            }
+        }
+
+        function saveCheckin() {
+            const entry = {
+                type: 'checkin',
+                date: new Date().toISOString(),
+                color: selectedColor,
+                moodLabel: selectedMoodLabel,
+                energy: document.getElementById('energyLevel').value,
+                emotions: [...selectedEmotions],
+                triggers: [...selectedTriggers],
+                hadMeltdown: document.getElementById('hadMeltdown').checked,
+                hadShutdown: document.getElementById('hadShutdown').checked,
+                nearMeltdown: document.getElementById('nearMeltdown').checked,
+                meltdownNotes: document.getElementById('meltdownNotes').value,
+                episodeType: document.getElementById('episodeType').value,
+                episodeIntensity: document.getElementById('episodeIntensity').value,
+                tookMeds: document.getElementById('tookMeds').checked,
+                sleptWell: document.getElementById('sleptWell').checked,
+                quickNotes: document.getElementById('quickNotes').value
+            };
+
+            saveEntry(entry);
+            showToast('Check-in saved! 💜');
+            resetCheckinForm();
+        }
+
+        function saveJournal() {
+            const entry = {
+                type: 'journal',
+                date: new Date().toISOString(),
+                title: document.getElementById('journalTitle').value,
+                content: document.getElementById('journalEntry').value,
+                gratitude: [
+                    document.getElementById('gratitude1').value,
+                    document.getElementById('gratitude2').value,
+                    document.getElementById('gratitude3').value
+                ].filter(g => g),
+                intention: document.getElementById('intention').value
+            };
+
+            saveEntry(entry);
+            showToast('Journal saved! 📖');
+            resetJournalForm();
+        }
+
+        function saveEntry(entry) {
+            const users = JSON.parse(localStorage.getItem('mindfulme_users') || '{}');
+            if (!users[currentUser.username].entries) {
+                users[currentUser.username].entries = [];
+            }
+            users[currentUser.username].entries.unshift(entry);
+            localStorage.setItem('mindfulme_users', JSON.stringify(users));
+            currentUser.entries = users[currentUser.username].entries;
+        }
+
+        function getUserEntries() {
+            const users = JSON.parse(localStorage.getItem('mindfulme_users') || '{}');
+            return users[currentUser.username]?.entries || [];
+        }
+
+        function loadHistory() {
+            const entries = getUserEntries();
+            
+            // Update stats
+            document.getElementById('totalEntries').textContent = entries.length;
+            document.getElementById('journalCount').textContent = entries.filter(e => e.type === 'journal').length;
+            
+            // Count meltdowns in last 30 days
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            const recentMeltdowns = entries.filter(e => 
+                e.hadMeltdown && new Date(e.date) > thirtyDaysAgo
+            ).length;
+            document.getElementById('meltdownCount').textContent = recentMeltdowns;
+
+            // Calculate streak
+            const streak = calculateStreak(entries);
+            document.getElementById('currentStreak').textContent = streak;
+            
+            // Generate mood calendar
+            generateMoodCalendar(entries);
+            
+            // Show entries list
+            const list = document.getElementById('entriesList');
+            if (entries.length === 0) {
+                list.innerHTML = '<p class="text-gray-500 text-center py-8">No entries yet. Start by doing a check-in!</p>';
+                return;
+            }
+
+            list.innerHTML = entries.slice(0, 20).map(entry => {
+                const date = new Date(entry.date).toLocaleDateString('en-US', { 
+                    weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+                });
+                
+                if (entry.type === 'checkin') {
+                    return `
+                        <div class="p-4 rounded-2xl border-2 border-gray-100 hover:border-purple-200 transition" style="border-left: 6px solid ${entry.color || '#ccc'}">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="font-bold text-gray-800">${entry.moodLabel || 'Check-in'}</span>
+                                <span class="text-sm text-gray-500">${date}</span>
+                            </div>
+                            ${entry.emotions.length ? `<p class="text-sm text-gray-600 mb-1">Emotions: ${entry.emotions.join(', ')}</p>` : ''}
+                            ${entry.triggers.length ? `<p class="text-sm text-orange-600 mb-1">Triggers: ${entry.triggers.join(', ')}</p>` : ''}
+                            ${entry.episodeType ? `<span class="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded-full mr-2">${entry.episodeType} episode</span>` : ''}
+                            ${entry.hadMeltdown ? '<span class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full mr-2">Meltdown</span>' : ''}
+                            ${entry.hadShutdown ? '<span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full mr-2">Shutdown</span>' : ''}
+                            ${entry.tookMeds ? '<span class="text-xs bg-green-100 text-green-600 px-2 py-1 rounded-full mr-2">💊 Meds</span>' : ''}
+                            ${entry.quickNotes ? `<p class="text-sm text-gray-600 mt-2 italic">"${entry.quickNotes}"</p>` : ''}
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="p-4 rounded-2xl border-2 border-purple-100 bg-purple-50">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="font-bold text-purple-800">📖 ${entry.title || 'Journal Entry'}</span>
+                                <span class="text-sm text-gray-500">${date}</span>
+                            </div>
+                            <p class="text-gray-700">${entry.content.substring(0, 200)}${entry.content.length > 200 ? '...' : ''}</p>
+                            ${entry.gratitude.length ? `<p class="text-sm text-green-600 mt-2">🙏 Grateful for: ${entry.gratitude.join(', ')}</p>` : ''}
+                        </div>
+                    `;
+                }
+            }).join('');
+        }
+
+        function calculateStreak(entries) {
+            if (entries.length === 0) return 0;
+            
+            const today = new Date().toDateString();
+            const dates = [...new Set(entries.map(e => new Date(e.date).toDateString()))];
+            
+            let streak = 0;
+            let checkDate = new Date();
+            
+            // Check if there's an entry today
+            if (dates.includes(today)) {
+                streak = 1;
+                checkDate.setDate(checkDate.getDate() - 1);
+            }
+            
+            // Count consecutive previous days
+            while (dates.includes(checkDate.toDateString())) {
+                streak++;
+                checkDate.setDate(checkDate.getDate() - 1);
+            }
+            
+            return streak;
+        }
+
+        function generateMoodCalendar(entries) {
+            const calendar = document.getElementById('moodCalendar');
+            const today = new Date();
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            
+            // Day headers
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            let html = days.map(d => `<div class="text-center text-xs font-semibold text-gray-500 py-2">${d}</div>`).join('');
+            
+            // Empty cells for first week
+            for (let i = 0; i < firstDay.getDay(); i++) {
+                html += '<div></div>';
+            }
+            
+            // Days
+            for (let day = 1; day <= lastDay.getDate(); day++) {
+                const dateStr = new Date(today.getFullYear(), today.getMonth(), day).toDateString();
+                const dayEntries = entries.filter(e => new Date(e.date).toDateString() === dateStr);
+                const color = dayEntries.find(e => e.color)?.color || '#e5e7eb';
+                const isToday = day === today.getDate();
+                
+                html += `
+                    <div class="aspect-square rounded-lg flex items-center justify-center text-sm font-semibold ${isToday ? 'ring-2 ring-purple-500' : ''}" 
+                         style="background-color: ${color}; color: ${color === '#e5e7eb' ? '#6b7280' : 'white'}">
+                        ${day}
+                    </div>
+                `;
+            }
+            
+            calendar.innerHTML = html;
+        }
+
+        function updateProfileStats() {
+            const entries = getUserEntries();
+            const checkins = entries.filter(e => e.type === 'checkin');
+            
+            // Unique days tracked
+            const uniqueDays = [...new Set(entries.map(e => new Date(e.date).toDateString()))].length;
+            document.getElementById('totalDays').textContent = uniqueDays;
+            
+            // Average energy
+            if (checkins.length > 0) {
+                const avgEnergy = (checkins.reduce((sum, e) => sum + parseInt(e.energy || 5), 0) / checkins.length).toFixed(1);
+                document.getElementById('avgEnergy').textContent = avgEnergy;
+            }
+        }
+
+        function resetCheckinForm() {
+            selectedColor = null;
+            selectedMoodLabel = '';
+            selectedEmotions = [];
+            selectedTriggers = [];
+            document.querySelectorAll('.mood-color').forEach(btn => {
+                btn.classList.remove('selected');
+                btn.style.boxShadow = '';
+            });
+            document.querySelectorAll('.emotion-btn, .trigger-btn').forEach(btn => {
+                btn.classList.remove('selected');
+                btn.style.transform = '';
+                btn.style.boxShadow = '';
+            });
+            document.getElementById('selectedMoodLabel').textContent = '';
+            document.getElementById('energyLevel').value = 5;
+            document.getElementById('hadMeltdown').checked = false;
+            document.getElementById('hadShutdown').checked = false;
+            document.getElementById('nearMeltdown').checked = false;
+            document.getElementById('meltdownNotes').value = '';
+            document.getElementById('episodeType').value = '';
+            document.getElementById('episodeIntensity').value = 1;
+            document.getElementById('tookMeds').checked = false;
+            document.getElementById('sleptWell').checked = false;
+            document.getElementById('quickNotes').value = '';
+        }
+
+        function resetJournalForm() {
+            document.getElementById('journalTitle').value = '';
+            document.getElementById('journalEntry').value = '';
+            document.getElementById('gratitude1').value = '';
+            document.getElementById('gratitude2').value = '';
+            document.getElementById('gratitude3').value = '';
+            document.getElementById('intention').value = '';
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        function clearHistory() {
+            if (confirm('Are you sure you want to delete all your data? This cannot be undone.')) {
+                const users = JSON.parse(localStorage.getItem('mindfulme_users') || '{}');
+                users[currentUser.username].entries = [];
+                localStorage.setItem('mindfulme_users', JSON.stringify(users));
+                currentUser.entries = [];
+                loadHistory();
+                updateProfileStats();
+                showToast('All data cleared');
+            }
+        }
+
+        function exportData() {
+            const entries = getUserEntries();
+            const dataStr = JSON.stringify(entries, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `mindfulme-export-${currentUser.username}-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            showToast('Data exported! 📤');
+        }
+
+        // Breathing exercise
+        function startBreathing() {
+            const circle = document.getElementById('breathCircle');
+            const text = document.getElementById('breathText');
+            const btn = document.getElementById('breathBtn');
+            
+            if (breathingInterval) {
+                clearInterval(breathingInterval);
+                breathingInterval = null;
+                btn.textContent = 'Start 4-7-8 Breathing';
+                text.textContent = 'Start';
+                circle.style.transform = '';
+                return;
+            }
+
+            btn.textContent = 'Stop';
+            let phase = 0;
+            const phases = [
+                { text: 'Breathe In', duration: 4000, scale: 1.5 },
+                { text: 'Hold', duration: 7000, scale: 1.5 },
+                { text: 'Breathe Out', duration: 8000, scale: 1 }
+            ];
+
+            function runPhase() {
+                const current = phases[phase % 3];
+                text.textContent = current.text;
+                circle.style.transition = `transform ${current.duration}ms ease-in-out`;
+                circle.style.transform = `scale(${current.scale})`;
+                phase++;
+            }
+
+            runPhase();
+            breathingInterval = setInterval(runPhase, phases.reduce((a, p) => a + p.duration, 0) / 3 + 100);
+        }
+
+        // Affirmations
+        const affirmations = [
+            "You are doing your best, and that is enough.",
+            "Your feelings are valid and important.",
+            "It's okay to take things one moment at a time.",
+            "You deserve kindness, especially from yourself.",
+            "Your brain works differently, and that's your superpower.",
+            "Rest is productive. You are allowed to pause.",
+            "You are more than your difficult days.",
+            "Small steps are still progress.",
+            "You are worthy of love and understanding.",
+            "It's okay to ask for help when you need it.",
+            "Your sensitivity is a gift, not a weakness.",
+            "You are resilient, even when you don't feel like it.",
+            "Today is a new opportunity to be gentle with yourself.",
+            "Your emotions don't define your worth.",
+            "You are learning and growing every day.",
+            "It's okay to not be okay sometimes."
+        ];
+
+        function newAffirmation() {
+            const el = document.getElementById('affirmation');
+            el.textContent = `"${affirmations[Math.floor(Math.random() * affirmations.length)]}"`;
+        }
+    </script>
+</body>
+</html>
